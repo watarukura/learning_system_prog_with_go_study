@@ -1,0 +1,7 @@
+[files]
+extend-exclude = [
+    "node_modules/**",
+    "go.mod",
+    "go.sum",
+    "package-lock.json"
+]

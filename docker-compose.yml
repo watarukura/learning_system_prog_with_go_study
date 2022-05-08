@@ -1,0 +1,21 @@
+---
+version: '3.4'
+services:
+  mysql:
+    image: mysql:8.0
+    tmpfs:
+      - /var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=my-db
+      - MYSQL_USER=my-user
+      - MYSQL_PASSWORD=my-password
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - TZ=Asia/Tokyo
+    volumes:
+      - ./docker/mysql/my.cnf:/etc/my.cnf:delegated
+    ports:
+      - "3306:3306"
+#  redis:
+#    image: redis:6
+#    ports:
+#      - "6379:6379"

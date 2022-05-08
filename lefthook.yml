@@ -1,0 +1,55 @@
+---
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      glob: "*.go"
+      run: golangci-lint run
+    markdownlint:
+      glob: "*.md"
+      run: npm run lint:markdownlint
+    yamllint:
+      glob: "*.{yml,yaml}"
+      run: |
+        if type -a yamllint >/dev/null 2>&1; then
+          yamllint -- {staged_files}
+        else
+          echo "yamllint is not found."
+        fi
+    actionlint:
+      root: ".github/workflows/"
+      glob: "*.{yml,yaml}"
+      run: actionlint
+    gitleaks:
+      run: |
+        if type -a gitleaks >/dev/null 2>&1; then
+          gitleaks detect -v
+        else
+          echo "gitleaks is not found."
+        fi
+    typos:
+      run: |
+        if type -a typos >/dev/null 2>&1; then
+          typos
+        else
+          echo "typos is not found."
+        fi
+
+setup:
+  parallel: false
+  commands:
+    aqua:
+      run: aqua install
+    tools:
+      run: |
+        if ! type -a yamllint >/dev/null 2>&1; then
+          brew install yamllint
+        fi
+        go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest
+    migrate:
+      run: migrate -database "$MYSQL_URL" -path "migrations" up
+#    openapi:
+#      run: |
+#        oapi-codegen -generate "server" -package openapi  openapi/openapi.yaml > openapi/server.gen.go
+#        oapi-codegen -generate "spec" -package openapi  openapi/openapi.yaml > openapi/spec.gen.go
+#        oapi-codegen -generate "types" -package openapi  openapi/openapi.yaml > openapi/types.gen.go

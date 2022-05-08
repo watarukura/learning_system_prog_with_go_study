@@ -1,0 +1,24 @@
+{
+  "name": "golang_template",
+  "version": "1.0.0",
+  "description": "",
+  "main": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint:markdownlint": "markdownlint -c markdownlint.config.js -i \"node_modules/**\" -p .gitignore \"**/*.md\"",
+    "fix:markdownlint": "npm run lint:markdownlint -- --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/watarukura/golang_template.git"
+  },
+  "author": "watarukura",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/watarukura/golang_template/issues"
+  },
+  "homepage": "https://github.com/watarukura/golang_template#readme",
+  "devDependencies": {
+    "markdownlint-cli": "^0.31.1"
+  }
+}

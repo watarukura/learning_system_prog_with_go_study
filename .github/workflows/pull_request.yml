@@ -1,0 +1,141 @@
+---
+name: Lint and Test
+
+on:
+  pull_request:
+
+env:
+  MYSQL_URL: mysql://my-user:my-password@tcp(127.0.0.1:3306)/my-db
+  APP_ENVIRONMENT: ci
+
+jobs:
+  cleanup:
+    name: Cancel previous runs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel previous runs
+        timeout-minutes: 3
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ secrets.GITHUB_TOKEN }}
+
+  lint:
+    runs-on: ubuntu-latest
+    needs:
+      - cleanup
+    steps:
+      - name: Setup code
+        uses: actions/checkout@v2
+
+      - name: Setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.18.1'
+
+      - name: Cache Go Modules
+        uses: actions/cache@v2
+        id: cache
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download Modules
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: go mod download
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.45.2
+
+  test:
+    runs-on: ubuntu-latest
+    needs:
+      - cleanup
+    services:
+      mysql:
+        image: mysql:8.0
+        ports:
+          - "3306:3306"
+        env:
+          MYSQL_USER: my-user
+          MYSQL_PASSWORD: my-password
+          MYSQL_DB: my-db
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+          -e MYSQL_USER=my-user
+          -e MYSQL_PASSWORD=my-password
+          -e MYSQL_DATABASE=my-db
+          -e MYSQL_ALLOW_EMPTY_PASSWORD=yes
+          --entrypoint sh mysql:8.0 -c "exec docker-entrypoint.sh mysqld --default-authentication-plugin=mysql_native_password"
+    #      redis:
+    #        image: redis:6
+    #        ports:
+    #          - "6379:6379"
+    steps:
+      - name: Setup code
+        uses: actions/checkout@v2
+
+      - name: Setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.18.1'
+
+      - name: Cache Go Modules
+        uses: actions/cache@v2
+        id: cache
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download Modules
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: go mod download
+
+      - name: install migrate
+        run: |
+          go install -tags 'mysql' github.com/golang-migrate/migrate/v4/cmd/migrate@v4.15.2
+
+      - name: migrate db
+        run: migrate -database "$MYSQL_URL" -path "migrations" up
+
+      - name: Run test
+        run: go test
+
+  typo:
+    runs-on: ubuntu-latest
+    needs:
+      - cleanup
+    steps:
+      - name: Setup code
+        uses: actions/checkout@v2
+
+      - name: Run typos
+        uses: crate-ci/typos@v1.4.1
+
+  superlinter:
+    runs-on: ubuntu-latest
+    needs:
+      - cleanup
+    steps:
+      - name: Setup code
+        uses: actions/checkout@v2
+
+      - name: Lint Code Base
+        uses: github/super-linter/slim@v4
+        env:
+          VALIDATE_ALL_CODEBASE: false
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_GITHUB_ACTIONS: true
+          VALIDATE_JSON: true
+          VALIDATE_MARKDOWN: true
+          VALIDATE_SQL: true
+          VALIDATE_YAML: true

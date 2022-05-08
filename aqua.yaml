@@ -1,0 +1,15 @@
+---
+# aqua - Declarative CLI Version Manager
+# https://aquaproj.github.io/
+registries:
+  - type: standard
+    ref: v2.12.0 # renovate: depName=aquaproj/aqua-registry
+
+packages:
+  - name: golangci/golangci-lint@v1.45.2
+  - name: crate-ci/typos@v1.7.3
+  - name: rhysd/actionlint@v1.6.10
+  - name: direnv/direnv@v2.31.0
+  - name: zricethezav/gitleaks@v8.6.1
+  - name: cosmtrek/air@v1.29.0
+  - name: golang-migrate/migrate@v4.15.2
